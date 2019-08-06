@@ -1,21 +1,9 @@
 
-Lava.prototype.act = function(step, level) {
-    let newPos = this.pos.plus(this.speed.times(step));
-    if (!level.obstacleAt(newPos, this.size))
-        this.pos = newPos;
-    else if (this.repeatPos)
-        this.pos = this.repeatPos;
-    else
-        this.speed = this.speed.times(-1);
-};
-
-let wobbleSpeed = 8, wobbleDist = 0.07;
-
-Coin.prototype.act = function(step) {
-    this.wobble += step * wobbleSpeed;
-    let wobblePos = Math.sin(this.wobble) * wobbleDist;
-    this.pos = this.basePos.plus(new Vector(0, wobblePos));
-};
+function Player(pos) {
+    this.pos = pos.plus(new Vector(0, -0.5));
+    this.size = new Vector(0.8, 1.5);
+    this.speed = new Vector(0, 0);
+}
 
 let playerXSpeed = 7;
 
