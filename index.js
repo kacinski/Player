@@ -1,14 +1,14 @@
-let simpleLevelPlan = [
-    "                      ",
-    "                      ",
-    "  x              = x  ",
-    "  x         o o    x  ",
-    "  x @      xxxxx   x  ",
-    "  xxxxx            x  ",
-    "      x!!!!!!!!!!!!x  ",
-    "      xxxxxxxxxxxxxx  ",
-    "                      "
-];
+// let simpleLevelPlan = [
+//     "                      ",
+//     "                      ",
+//     "  x              = x  ",
+//     "  x         o o    x  ",
+//     "  x @      xxxxx   x  ",
+//     "  xxxxx            x  ",
+//     "      x!!!!!!!!!!!!x  ",
+//     "      xxxxxxxxxxxxxx  ",
+//     "                      "
+// ];
 
 let actorChars = {
     "@": Player,
@@ -110,8 +110,6 @@ Level.prototype.playerTouched = function(type, actor) {
     }
 };
 
-Player.prototype.type = "player";
-
 function Lava(pos, ch) {
     this.pos = pos;
     this.size = new Vector(1, 1);
@@ -126,22 +124,6 @@ function Lava(pos, ch) {
 }
 Lava.prototype.type = "lava";
 
-function Coin(pos) {
-    this.basePos = this.pos = pos.plus(new Vector(0.2, 0.1));
-    this.size = new Vector(0.6, 0.6);
-    this.wobble = Math.random() * Math.PI * 2;
-}
-Coin.prototype.type = "coin";
-
-let simpleLevel = new Level(simpleLevelPlan);
-// console.log(simpleLevel.width, "by", simpleLevel.height);
-
-function elt(name, className) {
-    let elt = document.createElement(name);
-    if (className) elt.className = className;
-    return elt;
-}
-
 Lava.prototype.act = function(step, level) {
     let newPos = this.pos.plus(this.speed.times(step));
     if (!level.obstacleAt(newPos, this.size))
@@ -152,7 +134,19 @@ Lava.prototype.act = function(step, level) {
         this.speed = this.speed.times(-1);
 };
 
-let wobbleSpeed = 8, wobbleDist = 0.07;
+
+function Coin(pos) {
+    this.basePos = this.pos = pos.plus(new Vector(0.2, 0.1));
+    this.size = new Vector(0.6, 0.6);
+    this.wobble = Math.random() * Math.PI * 2;
+}
+Coin.prototype.type = "coin";
+
+// let simpleLevel = new Level(simpleLevelPlan);
+// let x = simpleLevel.width + "by" + simpleLevel.height;
+// document.getElementById("level").innerHTML = x.toString();
+
+
 
 Coin.prototype.act = function(step) {
     this.wobble += step * wobbleSpeed;
@@ -160,9 +154,11 @@ Coin.prototype.act = function(step) {
     this.pos = this.basePos.plus(new Vector(0, wobblePos));
 };
 
+function elt(name, className) {
+    let elt = document.createElement(name);
+    if (className) elt.className = className;
+    return elt;
+}
 
 
-
-
-
-
+let wobbleSpeed = 8, wobbleDist = 0.07;

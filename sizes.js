@@ -12,7 +12,6 @@ Vector.prototype.times = function(factor) {
 function DOMDisplay(parent, level) {
     this.wrap = parent.appendChild(elt("div", "game"));
     this.level = level;
-
     this.wrap.appendChild(this.drawBackground());
     this.actorLayer = null;
     this.drawFrame();

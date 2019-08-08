@@ -1,4 +1,5 @@
 
+
 function Player(pos) {
     this.pos = pos.plus(new Vector(0, -0.5));
     this.size = new Vector(0.8, 1.5);
@@ -6,6 +7,8 @@ function Player(pos) {
 }
 
 let playerXSpeed = 7;
+
+Player.prototype.type = "player";
 
 Player.prototype.moveX = function(step, level, keys) {
     this.speed.x = 0;
@@ -74,6 +77,25 @@ let arrowCodes = {37: "left", 38: "up", 39: "right"};
 
 let arrows = trackKeys(arrowCodes);
 
+
+
+function runAnimation(frameFunc) {
+    let lastTime = null;
+    function frame(time) {
+        let stop = false;
+        if (lastTime != null) {
+             let timeStep = Math.min(time - lastTime, 100) / 1000;
+            stop = frameFunc(timeStep) === false;
+            console.log(timeStep)
+        }
+        lastTime = time;
+        if (!stop)
+            requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
+
 function runLevel(level, Display, andThen) {
     let display = new Display(document.body, level);
     runAnimation(function(step) {
@@ -89,30 +111,33 @@ function runLevel(level, Display, andThen) {
 }
 
 function runGame(plans, Display) {
-    function startLevel(n) {
-        runLevel(new Level(plans[n]), Display, function(status) {
-            if (status == "lost")
-                startLevel(n);
-            else if (n < plans.length - 1)
-                startLevel(n + 1);
-            else
-                console.log("You win!");
-        });
-    }
-    startLevel(0);
-}
 
-function runAnimation(frameFunc) {
-    let lastTime = null;
-    function frame(time) {
-        let stop = false;
-        if (lastTime != null) {
-            let timeStep = Math.min(time - lastTime, 100) / 1000;
-            stop = frameFunc(timeStep) === false;
+    let lifes = 3;
+    function startLevel(n) {
+        if (lifes > 0) {
+            runLevel(new Level(plans[n]), Display, function (status) {
+
+                if (status == "lost") {
+                    lifes = lifes - 1;
+                    startLevel(n);
+                    if (lifes === 0) {
+                        let conf = confirm("You loose! Try new game?");
+                        if (!conf) {
+                            location.reload();
+                        }else{
+                            startLevel(0);
+                        }
+
+                    }
+                } else if (n < plans.length - 1)
+                    startLevel(n + 1);
+                else
+                    alert("You win!");
+            });
         }
-        lastTime = time;
-        if (!stop)
-            requestAnimationFrame(frame);
+            document.getElementById("lifes").innerHTML = lifes.toString();
+
+        }
+        startLevel(0);
     }
-    requestAnimationFrame(frame);
-}
+
