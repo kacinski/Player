@@ -96,9 +96,20 @@ function runAnimation(frameFunc) {
 }
 
 
+function resume() {
+    document.body.style.background = "yellow";
+    return check = true;
+}
+function pause(){
+    document.body.style.background = "grey";
+    return check = false;
+}
+
 function runLevel(level, Display, andThen) {
     let display = new Display(document.body, level);
+
     runAnimation(function(step) {
+        if(!check) return;
         level.animate(step, arrows);
         display.drawFrame(step);
         if (level.isFinished()) {
@@ -108,8 +119,9 @@ function runLevel(level, Display, andThen) {
             return false;
         }
     });
-}
 
+}
+resume();
 function runGame(plans, Display) {
 
     let lifes = 3;
