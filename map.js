@@ -12,6 +12,7 @@
 
 let actorChars = {
     "@": Player,
+    "%": Owl,
     "o": Coin,
     "=": Lava, "|": Lava, "v": Lava
 };
@@ -29,9 +30,9 @@ function Level(plan) {
             let Actor = actorChars[ch];
             if (Actor)
                 this.actors.push(new Actor(new Vector(x, y), ch));
-            else if (ch == "x")
+            else if (ch === "x")
                 fieldType = "wall";
-            else if (ch == "!")
+            else if (ch === "!")
                 fieldType = "lava";
             gridLine.push(fieldType);
         }
@@ -39,7 +40,7 @@ function Level(plan) {
     }
 
     this.player = this.actors.filter(function(actor) {
-        return actor.type == "player";
+        return actor.type === "player";
     })[0];
     this.status = this.finishDelay = null;
 }
@@ -94,15 +95,18 @@ Level.prototype.animate = function(step, keys) {
 };
 
 Level.prototype.playerTouched = function(type, actor) {
-    if (type == "lava" && this.status == null) {
+    if (type === "lava" && this.status === null) {
         this.status = "lost";
         this.finishDelay = 1;
-    } else if (type == "coin") {
+    }else if(type === "owl" && this.status === null){
+        this.status = "lost";
+        this.finishDelay = 1;
+    }else if (type === "coin") {
         this.actors = this.actors.filter(function(other) {
             return other != actor;
         });
         if (!this.actors.some(function(actor) {
-            return actor.type == "coin";
+            return actor.type === "coin";
         })) {
             this.status = "won";
             this.finishDelay = 1;
@@ -110,14 +114,34 @@ Level.prototype.playerTouched = function(type, actor) {
     }
 };
 
+function Owl(pos, ch){
+    this.pos = pos;
+    this.size = new Vector(1, 0.6);
+    if(ch === "%"){
+        this.speed = new Vector(3, 0);
+    }
+}
+
+Owl.prototype.type = "owl";
+
+Owl.prototype.act = function(step, level) {
+    let newPos = this.pos.plus(this.speed.times(step));
+    if (!level.obstacleAt(newPos, this.size))
+        this.pos = newPos;
+    else if (this.repeatPos)
+        this.pos = this.repeatPos;
+    else
+        this.speed = this.speed.times(-1);
+};
+
 function Lava(pos, ch) {
     this.pos = pos;
     this.size = new Vector(1, 1);
-    if (ch == "=") {
+    if (ch === "=") {
         this.speed = new Vector(2, 0);
-    } else if (ch == "|") {
+    } else if (ch === "|") {
         this.speed = new Vector(0, 2);
-    } else if (ch == "v") {
+    } else if (ch === "v") {
         this.speed = new Vector(0, 3);
         this.repeatPos = pos;
     }

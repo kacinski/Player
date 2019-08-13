@@ -1,4 +1,4 @@
-
+let onplay = false;
 
 function Player(pos) {
     this.pos = pos.plus(new Vector(0, -0.5));
@@ -52,7 +52,7 @@ Player.prototype.act = function(step, level, keys) {
         level.playerTouched(otherActor.type, otherActor);
 
     // Losing animation
-    if (level.status == "lost") {
+    if (level.status === "lost") {
         this.pos.y += step;
         this.size.y -= step;
     }
@@ -62,7 +62,7 @@ function trackKeys(codes) {
     let pressed = Object.create(null);
     function handler(event) {
         if (codes.hasOwnProperty(event.keyCode)) {
-            let down = event.type == "keydown";
+            let down = event.type === "keydown";
             pressed[codes[event.keyCode]] = down;
             event.preventDefault();
 
@@ -86,7 +86,6 @@ function runAnimation(frameFunc) {
         if (lastTime != null) {
              let timeStep = Math.min(time - lastTime, 100) / 1000;
             stop = frameFunc(timeStep) === false;
-            console.log(timeStep)
         }
         lastTime = time;
         if (!stop)
@@ -97,7 +96,7 @@ function runAnimation(frameFunc) {
 
 
 function resume() {
-    document.body.style.background = "yellow";
+    document.body.style.background = "white";
     return check = true;
 }
 function pause(){
@@ -122,34 +121,39 @@ function runLevel(level, Display, andThen) {
 
 }
 resume();
-function runGame(plans, Display) {
 
-    let lifes = 3;
-    function startLevel(n) {
-        if (lifes > 0) {
-            runLevel(new Level(plans[n]), Display, function (status) {
+    function runGame(plans, Display) {
 
-                if (status == "lost") {
-                    lifes = lifes - 1;
-                    startLevel(n);
-                    if (lifes === 0) {
-                        let conf = confirm("You loose! Try new game?");
-                        if (!conf) {
-                            location.reload();
-                        }else{
-                            startLevel(0);
+        if(!onplay) {
+        let lifes = 3;
+
+        function startLevel(n) {
+            onplay = true;
+            if (lifes > 0) {
+                runLevel(new Level(plans[n]), Display, function (status) {
+
+                    if (status === "lost") {
+                        lifes = lifes - 1;
+                        startLevel(n);
+                        if (lifes === 0) {
+                            let conf = confirm("You loose! Try new game?");
+                            if (!conf) {
+                                location.reload();
+                            } else {
+                                startLevel(0);
+                            }
+
                         }
-
-                    }
-                } else if (n < plans.length - 1)
-                    startLevel(n + 1);
-                else
-                    alert("You win!");
-            });
-        }
+                    } else if (n < plans.length - 1)
+                        startLevel(n + 1);
+                    else
+                        alert("You win!");
+                });
+            }
             document.getElementById("lifes").innerHTML = lifes.toString();
 
         }
+
         startLevel(0);
     }
-
+}
