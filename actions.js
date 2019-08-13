@@ -75,7 +75,7 @@ function trackKeys(codes) {
 
 let arrowCodes = {37: "left", 38: "up", 39: "right"};
 
-let arrows = trackKeys(arrowCodes);
+
 
 
 
@@ -106,6 +106,7 @@ function pause(){
 
 function runLevel(level, Display, andThen) {
     let display = new Display(document.body, level);
+    let arrows = trackKeys(arrowCodes);
 
     runAnimation(function(step) {
         if(!check) return;
