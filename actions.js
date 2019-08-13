@@ -121,6 +121,7 @@ function runLevel(level, Display, andThen) {
     });
 
 }
+
 resume();
 
     function runGame(plans, Display) {
@@ -141,7 +142,8 @@ resume();
                             if (!conf) {
                                 location.reload();
                             } else {
-                                startLevel(0);
+                                onplay = false;
+                                runGame(GAME_LEVELS, DOMDisplay);
                             }
 
                         }
