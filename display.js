@@ -1,13 +1,10 @@
-function Vector(x, y) {
-    this.x = x; this.y = y;
+
+function elt(name, className) {
+    let elt = document.createElement(name);
+    if (className) elt.className = className;
+    return elt;
 }
 
-Vector.prototype.plus = function(other) {
-    return new Vector(this.x + other.x, this.y + other.y);
-};
-Vector.prototype.times = function(factor) {
-    return new Vector(this.x * factor, this.y * factor);
-};
 
 function DOMDisplay(parent, level) {
     this.wrap = parent.appendChild(elt("div", "game"));
@@ -75,6 +72,7 @@ DOMDisplay.prototype.scrollPlayerIntoView = function() {
     else if (center.y > bottom - margin)
         this.wrap.scrollTop = center.y + margin - height;
 };
+
 DOMDisplay.prototype.clear = function() {
     this.wrap.parentNode.removeChild(this.wrap);
 };

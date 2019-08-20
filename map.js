@@ -1,14 +1,6 @@
-// let simpleLevelPlan = [
-//     "                      ",
-//     "                      ",
-//     "  x              = x  ",
-//     "  x         o o    x  ",
-//     "  x @      xxxxx   x  ",
-//     "  xxxxx            x  ",
-//     "      x!!!!!!!!!!!!x  ",
-//     "      xxxxxxxxxxxxxx  ",
-//     "                      "
-// ];
+
+
+let wobbleSpeed = 8, wobbleDist = 0.07;
 
 let actorChars = {
     "@": Player,
@@ -16,6 +8,19 @@ let actorChars = {
     "o": Coin,
     "=": Lava, "|": Lava, "v": Lava
 };
+
+function Vector(x, y) {
+    this.x = x; this.y = y;
+}
+
+Vector.prototype.plus = function(other) {
+    return new Vector(this.x + other.x, this.y + other.y);
+};
+Vector.prototype.times = function(factor) {
+    return new Vector(this.x * factor, this.y * factor);
+};
+
+//Level
 
 function Level(plan) {
     this.width = plan[0].length;
@@ -67,6 +72,28 @@ Level.prototype.obstacleAt = function(pos, size) {
     }
 };
 
+Level.prototype.obstacleAi = function(pos, size) {
+    let xStart = Math.floor(pos.x);
+    let xEnd = Math.ceil(pos.x + size.x);
+    let yStart = Math.floor(pos.y);
+    let yEnd = Math.ceil(pos.y + size.y);
+    let line = pos.y + 1;
+    let cliff = xStart +1;
+    if (xStart < 0 || xEnd > this.width || yStart < 0)
+        return "wall";
+    if(!this.grid[line][cliff] || !this.grid[line][xStart])
+        return "wall";
+
+
+    for (let y = yStart; y < yEnd; y++) {
+        for (let x = xStart; x < xEnd; x++) {
+            let fieldType = this.grid[y][x];
+            if (fieldType) return fieldType;
+        }
+    }
+};
+
+
 Level.prototype.actorAt = function(actor) {
     for (let i = 0; i < this.actors.length; i++) {
         let other = this.actors[i];
@@ -99,8 +126,9 @@ Level.prototype.playerTouched = function(type, actor) {
         this.status = "lost";
         this.finishDelay = 1;
     }else if(type === "owl" && this.status === null){
-        this.status = "lost";
-        this.finishDelay = 1;
+        this.actors = this.actors.filter(function(other) {
+            return other != actor;
+        });
     }else if (type === "coin") {
         this.actors = this.actors.filter(function(other) {
             return other != actor;
@@ -114,9 +142,72 @@ Level.prototype.playerTouched = function(type, actor) {
     }
 };
 
+//The player
+
+function Player(pos) {
+    this.pos = pos.plus(new Vector(0, -0.5));
+    this.size = new Vector(0.8, 1.5);
+    this.speed = new Vector(0, 0);
+}
+
+let playerXSpeed = 7;
+
+Player.prototype.type = "player";
+
+Player.prototype.moveX = function(step, level, keys) {
+    this.speed.x = 0;
+    if (keys.left) this.speed.x -= playerXSpeed;
+    if (keys.right) this.speed.x += playerXSpeed;
+
+    let motion = new Vector(this.speed.x * step, 0);
+    let newPos = this.pos.plus(motion);
+    let obstacle = level.obstacleAt(newPos, this.size);
+    if (obstacle)
+        level.playerTouched(obstacle);
+    else
+        this.pos = newPos;
+};
+
+let gravity = 30;
+let jumpSpeed = 17;
+
+Player.prototype.moveY = function(step, level, keys) {
+    this.speed.y += step * gravity;
+    let motion = new Vector(0, this.speed.y * step);
+    let newPos = this.pos.plus(motion);
+    let obstacle = level.obstacleAt(newPos, this.size);
+    if (obstacle) {
+        level.playerTouched(obstacle);
+        if (keys.up && this.speed.y > 0){
+            this.speed.y = -jumpSpeed;
+        }
+        else
+            this.speed.y = 0;
+    } else {
+        this.pos = newPos;
+    }
+};
+
+Player.prototype.act = function(step, level, keys) {
+    this.moveX(step, level, keys);
+    this.moveY(step, level, keys);
+
+    let otherActor = level.actorAt(this);
+    if (otherActor)
+        level.playerTouched(otherActor.type, otherActor);
+
+    // Losing animation
+    if (level.status === "lost") {
+        this.pos.y += step;
+        this.size.y -= step;
+    }
+};
+
+// The owl
+
 function Owl(pos, ch){
     this.pos = pos;
-    this.size = new Vector(1, 0.6);
+    this.size = new Vector(1, 1);
     if(ch === "%"){
         this.speed = new Vector(3, 0);
     }
@@ -124,15 +215,45 @@ function Owl(pos, ch){
 
 Owl.prototype.type = "owl";
 
+// Owl.prototype.moveX = function(step, level) {
+//
+//     this.speed.x = 2;
+//     let motion = new Vector(this.speed.x * step, 0);
+//     let newPos = this.pos.plus(motion);
+//     let obstacle = level.obstacleAi(newPos, this.size);
+//     if (obstacle)
+//         this.speed = this.speed.times(-1);
+//     else
+//         this.pos = newPos;
+// };
+
+// Owl.prototype.moveY = function(step, level) {
+// //     this.speed.y = 1;
+// //     let newPos = this.pos.plus(this.speed.times(step));
+// //
+// //     let obstacle = level.obstacleAi(newPos, this.size);
+// //     if (obstacle)
+// //         level.playerTouched(obstacle);
+// //     else
+// //         this.pos = newPos;
+// // };
+
 Owl.prototype.act = function(step, level) {
     let newPos = this.pos.plus(this.speed.times(step));
-    if (!level.obstacleAt(newPos, this.size))
+
+    if (!level.obstacleAi(newPos, this.size)){
         this.pos = newPos;
-    else if (this.repeatPos)
-        this.pos = this.repeatPos;
+    }
     else
         this.speed = this.speed.times(-1);
+    // this.moveX(step, level);
+    // this.moveY(step, level);
+
 };
+
+
+
+// Lava
 
 function Lava(pos, ch) {
     this.pos = pos;
@@ -158,6 +279,7 @@ Lava.prototype.act = function(step, level) {
         this.speed = this.speed.times(-1);
 };
 
+// Coin
 
 function Coin(pos) {
     this.basePos = this.pos = pos.plus(new Vector(0.2, 0.1));
@@ -166,23 +288,8 @@ function Coin(pos) {
 }
 Coin.prototype.type = "coin";
 
-// let simpleLevel = new Level(simpleLevelPlan);
-// let x = simpleLevel.width + "by" + simpleLevel.height;
-// document.getElementById("level").innerHTML = x.toString();
-
-
-
 Coin.prototype.act = function(step) {
     this.wobble += step * wobbleSpeed;
     let wobblePos = Math.sin(this.wobble) * wobbleDist;
     this.pos = this.basePos.plus(new Vector(0, wobblePos));
 };
-
-function elt(name, className) {
-    let elt = document.createElement(name);
-    if (className) elt.className = className;
-    return elt;
-}
-
-
-let wobbleSpeed = 8, wobbleDist = 0.07;
