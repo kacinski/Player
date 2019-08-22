@@ -1,5 +1,6 @@
 let onplay = false;
 
+
 function trackKeys(codes) {
     let pressed = Object.create(null);
     function handler(event) {
@@ -18,9 +19,6 @@ function trackKeys(codes) {
 let arrowCodes = {37: "left", 38: "up", 39: "right"};
 
 
-
-
-
 function runAnimation(frameFunc) {
     let lastTime = null;
     function frame(time) {
@@ -36,7 +34,7 @@ function runAnimation(frameFunc) {
     requestAnimationFrame(frame);
 }
 
-
+let soundPause, check;
 function resume() {
     document.body.style.background = "white";
     return check = true;
@@ -64,41 +62,71 @@ function runLevel(level, Display, andThen) {
 
 }
 
-resume();
+let startTrack = "./sounds/super-mario-saundtrek.mp3";
+let deadTrack = "./sounds/mario-smert.mp3";
 
-    function runGame(plans, Display) {
+    let deadSound = new Howl({
+        src: [deadTrack],
+        volume: 0.5
+    });
 
+
+let backgroundSound = new Howl({
+    src: [startTrack],
+    volume: 0.5
+});
+
+
+function music (){
+    backgroundSound.play();
+}
+
+
+
+function soundInterval() {
+    if (soundRefresh)
+        soundtrack = setInterval(music, 63500);
+
+    soundRefresh = false;
+}
+    resume();
+
+function runGame(plans, Display) {
+        music();
+        soundRefresh = true;
+        soundInterval();
         if(!onplay) {
-        let lifes = 3;
+          let lifes = 3;
+                function startLevel(n) {
+                    onplay = true;
+                    if (lifes > 0) {
+                        runLevel(new Level(plans[n]), Display, function (status) {
 
-        function startLevel(n) {
-            onplay = true;
-            if (lifes > 0) {
-                runLevel(new Level(plans[n]), Display, function (status) {
+                            if (status === "lost"){
+                                backgroundSound.stop();
+                                deadSound.play();
+                                lifes = lifes - 1;
+                                startLevel(n);
+                                backgroundSound.play();
+                                if (lifes === 0) {
+                                    let conf = confirm("You loose! Try new game?");
+                                    if (!conf) {
+                                        location.reload();
+                                    } else {
+                                        onplay = false;
+                                        runGame(GAME_LEVELS, DOMDisplay);
+                                    }
 
-                    if (status === "lost") {
-                        lifes = lifes - 1;
-                        startLevel(n);
-                        if (lifes === 0) {
-                            let conf = confirm("You loose! Try new game?");
-                            if (!conf) {
-                                location.reload();
-                            } else {
-                                onplay = false;
-                                runGame(GAME_LEVELS, DOMDisplay);
-                            }
+                                }
+                            }else if (n < plans.length - 1)
+                                startLevel(n + 1);
+                            else
+                                alert("You win!");
+                        });
+                    }
+                    document.getElementById("lifes").innerHTML = lifes.toString();
 
-                        }
-                    }else if (n < plans.length - 1)
-                        startLevel(n + 1);
-                    else
-                        alert("You win!");
-                });
-            }
-            document.getElementById("lifes").innerHTML = lifes.toString();
-
+                }
+          startLevel(0);
         }
-
-        startLevel(0);
-    }
 }

@@ -77,8 +77,8 @@ Level.prototype.obstacleAi = function(pos, size) {
     let xEnd = Math.ceil(pos.x + size.x);
     let yStart = Math.floor(pos.y);
     let yEnd = Math.ceil(pos.y + size.y);
-    let line = pos.y + 1;
-    let cliff = xStart +1;
+    let line = pos.y + size.y;
+    let cliff = xStart + size.x;
     if (xStart < 0 || xEnd > this.width || yStart < 0)
         return "wall";
     if(!this.grid[line][cliff] || !this.grid[line][xStart])
@@ -126,6 +126,7 @@ Level.prototype.playerTouched = function(type, actor) {
         this.status = "lost";
         this.finishDelay = 1;
     }else if(type === "owl" && this.status === null){
+        console.log(Player.pos);
         this.actors = this.actors.filter(function(other) {
             return other != actor;
         });
@@ -146,7 +147,7 @@ Level.prototype.playerTouched = function(type, actor) {
 
 function Player(pos) {
     this.pos = pos.plus(new Vector(0, -0.5));
-    this.size = new Vector(0.8, 1.5);
+    this.size = new Vector(2, 2.5);
     this.speed = new Vector(0, 0);
 }
 
@@ -156,7 +157,7 @@ Player.prototype.type = "player";
 
 Player.prototype.moveX = function(step, level, keys) {
     this.speed.x = 0;
-    if (keys.left) this.speed.x -= playerXSpeed;
+    if (keys.left)  this.speed.x -= playerXSpeed;
     if (keys.right) this.speed.x += playerXSpeed;
 
     let motion = new Vector(this.speed.x * step, 0);
@@ -215,29 +216,6 @@ function Owl(pos, ch){
 
 Owl.prototype.type = "owl";
 
-// Owl.prototype.moveX = function(step, level) {
-//
-//     this.speed.x = 2;
-//     let motion = new Vector(this.speed.x * step, 0);
-//     let newPos = this.pos.plus(motion);
-//     let obstacle = level.obstacleAi(newPos, this.size);
-//     if (obstacle)
-//         this.speed = this.speed.times(-1);
-//     else
-//         this.pos = newPos;
-// };
-
-// Owl.prototype.moveY = function(step, level) {
-// //     this.speed.y = 1;
-// //     let newPos = this.pos.plus(this.speed.times(step));
-// //
-// //     let obstacle = level.obstacleAi(newPos, this.size);
-// //     if (obstacle)
-// //         level.playerTouched(obstacle);
-// //     else
-// //         this.pos = newPos;
-// // };
-
 Owl.prototype.act = function(step, level) {
     let newPos = this.pos.plus(this.speed.times(step));
 
@@ -246,12 +224,8 @@ Owl.prototype.act = function(step, level) {
     }
     else
         this.speed = this.speed.times(-1);
-    // this.moveX(step, level);
-    // this.moveY(step, level);
 
 };
-
-
 
 // Lava
 
